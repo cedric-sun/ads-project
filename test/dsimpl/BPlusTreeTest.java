@@ -110,8 +110,9 @@ public class BPlusTreeTest {
         for (int i = 0; i < data.length; i++) {
             bp.delete(data[i].k);
         }
-        System.out.println("F");
     }
+
+
 
     @Test
     public void get() {

@@ -1,10 +1,31 @@
 package dsimpl;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
 public class BPlusTree {
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        Queue<Node> now = new ArrayDeque<>();
+        Queue<Node> next = new ArrayDeque<>();
+        now.add(root);
+        while (!now.isEmpty()) {
+            while (!now.isEmpty()) {
+                Node node = now.poll();
+                sb.append(node);
+                if (node instanceof NonLeafNode) {
+                    for (Node child : ((NonLeafNode) node).children)
+                        next.add(child);
+                }
+            }
+            sb.append('\n');
+            Queue<Node> tmp = now;
+            now = next;
+            next = tmp;
+        }
+        return sb.toString();
+    }
+
     static class Pair {
         public final int k;
         public final double v;
@@ -29,7 +50,7 @@ public class BPlusTree {
             StringBuilder sb = new StringBuilder();
             sb.append("In[");
             for (int i = 0; i < keys.size(); i++) {
-                if (i!=0) sb.append(',');
+                if (i != 0) sb.append(',');
                 sb.append(keys.get(i));
             }
             sb.append(']');
@@ -121,40 +142,46 @@ public class BPlusTree {
             int removedKey = keys.remove(i - 1);
             children.remove(i);
 
-            //todo: special case for root
-            if (keys.size() < MIN_NODE_SIZE) {
-                int iSep = parent.lowerBound(removedKey);
-                int iRightSib = iSep + 1;
-                int iLeftSib = iSep - 1;
-                if (iRightSib < parent.keys.size()
-                        && ((NonLeafNode) parent.children.get(iRightSib)).keys.size() > MIN_NODE_SIZE) {
-                    //borrow from right
-                    //todo: balancing borrow
-                    NonLeafNode rightSib = (NonLeafNode) parent.children.get(iRightSib);
-                    keys.add(parent.keys.set(iSep, rightSib.keys.remove(0)));
-                } else if (iLeftSib >= 0 && ((NonLeafNode) parent.children.get(iLeftSib)).keys.size() > MIN_NODE_SIZE) {
-                    //borrow from left
-                    NonLeafNode leftSib = (NonLeafNode) parent.children.get(iLeftSib);
-                    keys.add(0, parent.keys.set(iSep, leftSib.keys.remove(leftSib.keys.size() - 1)));
-                } else if (iRightSib < parent.keys.size()) {
-                    NonLeafNode rightSib = (NonLeafNode) parent.children.get(iRightSib);
-                    keys.add(parent.keys.get(iSep));
-                    keys.addAll(rightSib.keys);
-                    children.addAll(rightSib.children);
-                    for (Node node : rightSib.children)
-                        node.parent = this;
-                    parent.delete(rightSib.keys.get(0));
-                } else if (iLeftSib >= 0) {
-                    NonLeafNode leftSib = (NonLeafNode) parent.children.get(iLeftSib);
-                    leftSib.keys.add(parent.keys.get(iSep));
-                    leftSib.keys.addAll(keys);
-                    leftSib.children.addAll(children);
-                    for (Node node : children)
-                        node.parent = leftSib;
-                    parent.delete(keys.get(0));
-                } else {
-                    System.err.println("WTF");
-                    System.exit(-1);
+            if (this == root) {
+                if (keys.size() < 1)
+                    root = children.get(0);
+            } else {
+                if (keys.size() < MIN_NODE_SIZE) {
+                    int iRightSep = parent.lowerBound(removedKey);
+                    int iRightSib = iRightSep + 1;
+                    int iLeftSib = iRightSep - 1;
+                    if (iRightSib < parent.children.size()
+                            && ((NonLeafNode) parent.children.get(iRightSib)).keys.size() > MIN_NODE_SIZE) {
+                        //borrow from right
+                        //todo: balancing borrow
+                        NonLeafNode rightSib = (NonLeafNode) parent.children.get(iRightSib);
+                        keys.add(parent.keys.set(iRightSep, rightSib.keys.remove(0)));
+                        children.add(rightSib.children.remove(0));
+                    } else if (iLeftSib >= 0 && ((NonLeafNode) parent.children.get(iLeftSib)).keys.size() > MIN_NODE_SIZE) {
+                        //borrow from left
+                        NonLeafNode leftSib = (NonLeafNode) parent.children.get(iLeftSib);
+                        keys.add(0, parent.keys.set(iRightSep - 1, leftSib.keys.remove(leftSib.keys.size() - 1)));
+                        children.add(0, leftSib.children.remove(leftSib.children.size() - 1));
+                    } else if (iRightSib < parent.children.size()) {
+                        NonLeafNode rightSib = (NonLeafNode) parent.children.get(iRightSib);
+                        keys.add(parent.keys.get(iRightSep));
+                        keys.addAll(rightSib.keys);
+                        children.addAll(rightSib.children);
+                        for (Node node : rightSib.children)
+                            node.parent = this;
+                        parent.delete(rightSib.keys.get(0));
+                    } else if (iLeftSib >= 0) {
+                        NonLeafNode leftSib = (NonLeafNode) parent.children.get(iLeftSib);
+                        leftSib.keys.add(parent.keys.get(iRightSep - 1));
+                        leftSib.keys.addAll(keys);
+                        leftSib.children.addAll(children);
+                        for (Node node : children)
+                            node.parent = leftSib;
+                        parent.delete(removedKey);
+                    } else {
+                        System.err.println("WTF0");
+                        System.exit(-1);
+                    }
                 }
             }
         }
@@ -166,7 +193,7 @@ public class BPlusTree {
             StringBuilder sb = new StringBuilder();
             sb.append('[');
             for (int i = 0; i < data.size(); i++) {
-                if (i!=0) sb.append(',');
+                if (i != 0) sb.append(',');
                 sb.append(data.get(i).k);
             }
             sb.append(']');
@@ -263,12 +290,14 @@ public class BPlusTree {
                     parent.delete(k);
                 } else if (next != null && next.parent == parent) {
                     data.addAll(next.data);
+                    LeafNode originalRightSib = next;
                     if (next.next != null)
                         next.next.prev = this;
                     next = next.next;
-                    parent.delete(next.data.get(0).k);
+                    //todo bug: next is no longer next
+                    parent.delete(originalRightSib.data.get(0).k);
                 } else {
-                    System.err.println("WTF");
+                    System.err.println("WTF1");
                     System.exit(0);
                 }
             }
@@ -325,5 +354,44 @@ public class BPlusTree {
     // l <= k <= h
     double[] range(int l, int h) {
         return null;
+    }
+
+    /*----------------TEST ONLY STUFFS------------------*/
+
+    boolean testonlySanityCheck() {
+        sanityRecur(root);
+        return false;
+    }
+
+    boolean sanityRecur(Node node) {
+        if (node instanceof LeafNode) {
+            LeafNode cast = (LeafNode) node;
+            for (int i = 1; i < cast.data.size(); i++) {
+                if (cast.data.get(i - 1).k >= cast.data.get(i).k) {
+                    return false;
+                }
+            }
+            if (cast.prev != null &&
+                    cast.prev.data.get(cast.prev.data.size() - 1).k >= cast.data.get(0).k) {
+                return false;
+            }
+            if (cast.next != null &&
+                    cast.next.data.get(0).k <= cast.data.get(cast.data.size() - 1).k) {
+                return false;
+            }
+            return true;
+        } else {
+            NonLeafNode cast = (NonLeafNode) node;
+            for (int i = 1; i < cast.keys.size(); i++) {
+                if (cast.keys.get(i - 1) >= cast.keys.get(i))
+                    return false;
+            }
+
+            for (Node child : cast.children) {
+                boolean succ = sanityRecur(child);
+                if (!succ) return false;
+            }
+        }
+        return false;
     }
 }
