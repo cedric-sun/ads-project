@@ -200,13 +200,11 @@ public class BPlusTree {
             return sb.toString();
         }
 
-        private LeafNode prev, next;
+        private LeafNode prev = null, next = null;
         private ArrayList<Pair> data;
 
-        public LeafNode(Pair pair) {
+        public LeafNode() {
             data = new ArrayList<>();
-            data.add(pair);
-            prev = next = null;
         }
 
         public LeafNode(List<Pair> data) {
@@ -315,14 +313,10 @@ public class BPlusTree {
         M = m;
         MAX_NODE_SIZE = M - 1;
         MIN_NODE_SIZE = ((M & 1) == 1 ? (M + 1) >> 1 : M >> 1) - 1;
-        root = null;
+        root = new LeafNode();
     }
 
     void insert(int k, double v) {
-        if (root == null) {
-            root = new LeafNode(new Pair(k, v));
-            return;
-        }
         Node node = root;
         while (!(node instanceof LeafNode)) {
             node = ((NonLeafNode) node).promisingNode(k);
@@ -331,9 +325,6 @@ public class BPlusTree {
     }
 
     void delete(int k) {
-        if (root == null) {
-            return;
-        }
         Node node = root;
         while (!(node instanceof LeafNode)) {
             node = ((NonLeafNode) node).promisingNode(k);
