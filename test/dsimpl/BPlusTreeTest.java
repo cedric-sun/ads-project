@@ -120,5 +120,33 @@ public class BPlusTreeTest {
 
     @Test
     public void range() {
+        class Pair {
+            int k;
+            double v;
+
+            public Pair(int k, double v) {
+                this.k = k;
+                this.v = v;
+            }
+        }
+        Pair[] data = new Pair[]{
+                new Pair(9,0.7258506976568656),
+                new Pair(1,0.25137529047540985),
+                new Pair(8,0.436500663475739),
+                new Pair(4,0.2963288216690265),
+                new Pair(5,0.6161846898229543),
+                new Pair(7,0.056058099068894474),
+                new Pair(2,0.1688243376166424),
+                new Pair(0,0.46375381209298183),
+                new Pair(3,0.6122986978235035),
+                new Pair(6,0.4837472857372376)
+        };
+        BPlusTree bp = new BPlusTree(3);
+        for (int i = 0; i < data.length; i++) {
+            bp.insert(data[i].k,data[i].v);
+        }
+        for (double d : bp.range(3, 7)) {
+            System.out.println(d);
+        }
     }
 }

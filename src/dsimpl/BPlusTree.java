@@ -1,6 +1,7 @@
 package dsimpl;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class BPlusTree {
     @Override
@@ -99,7 +100,6 @@ public class BPlusTree {
 
         public void insert(int k, Node rightChild) {
             int i = upperBound(k);
-            assert i >= keys.size() || keys.get(i) != k;//assert k doesn't in parent. todo:remove
             keys.add(i, k);
             children.add(i + 1, rightChild);
             rightChild.parent = this;
@@ -274,7 +274,6 @@ public class BPlusTree {
             if (this != root && data.size() < MIN_NODE_SIZE) {
                 if (prev != null && prev.parent == parent && prev.data.size() > MIN_NODE_SIZE) {
                     data.add(0, prev.data.remove(prev.data.size() - 1));
-//                    parent.updateKey(data.get(0).k);//shall I pass the whole child?
                     parent.keys.set(parent.lowerBound(data.get(0).k), data.get(0).k);
                 } else if (next != null && next.parent == parent && next.data.size() > MIN_NODE_SIZE) {
                     //todo:balancing borrow
@@ -292,13 +291,17 @@ public class BPlusTree {
                     if (next.next != null)
                         next.next.prev = this;
                     next = next.next;
-                    //todo bug: next is no longer next
                     parent.delete(originalRightSib.data.get(0).k);
                 } else {
                     System.err.println("WTF1");
                     System.exit(0);
                 }
             }
+        }
+
+        List<Double> between(int l, int h) {
+            return data.subList(lowerBound(l), upperBound(h))
+                    .stream().map(pair -> pair.v).collect(Collectors.toList());
         }
     }
 
@@ -344,7 +347,26 @@ public class BPlusTree {
 
     // l <= k <= h
     double[] range(int l, int h) {
-        return null;
+        Node lNode = root, rNode = root;
+        ArrayList<Double> ans = new ArrayList<>();
+
+        while (!(lNode instanceof LeafNode)) {
+            lNode = ((NonLeafNode) lNode).promisingNode(l);
+            rNode = ((NonLeafNode) rNode).promisingNode(h);
+        }
+        LeafNode lCast = (LeafNode) lNode;
+        LeafNode rCast = (LeafNode) rNode;
+
+        for (; ; ) {
+            ans.addAll(lCast.between(l, h));
+            if (lCast==rCast) break;
+            lCast = lCast.next;
+        }
+        double[] ansPrimitive = new double[ans.size()];
+        for (int i = 0; i < ans.size(); i++) {
+            ansPrimitive[i] = ans.get(i);
+        }
+        return ansPrimitive;
     }
 
     /*----------------TEST ONLY STUFFS------------------*/
