@@ -336,7 +336,6 @@ public class BPlusTree {
     }
 
     double get(int k) {
-        if (root == null) return Double.NaN;
         Node node = root;
         while (!(node instanceof LeafNode))
             node = ((NonLeafNode) node).promisingNode(k);
