@@ -31,6 +31,9 @@ public class bplustree {
             BPlusTree bPlusTree = null;
             while ((line = br.readLine()) != null) {
                 String[] tokens = line.split("[\\(,\\)]");
+                for (int i = 0; i < tokens.length; i++) {
+                    tokens[i] = tokens[i].trim();
+                }
                 try {
                     switch (tokens[0]) {
                         case "Initialize":

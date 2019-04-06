@@ -143,8 +143,10 @@ public class BPlusTree {
             children.remove(i);
 
             if (this == root) {
-                if (keys.size() < 1)
+                if (keys.size() < 1) {
+                    children.get(0).parent = null;
                     root = children.get(0);
+                }
             } else {
                 if (keys.size() < MIN_NODE_SIZE) {
                     int iRightSep = parent.lowerBound(removedKey);
