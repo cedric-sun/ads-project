@@ -324,7 +324,7 @@ public class BPlusTree {
         root = new LeafNode();
     }
 
-    void insert(int k, double v) {
+    public void insert(int k, double v) {
         Node node = root;
         while (!(node instanceof LeafNode)) {
             node = ((NonLeafNode) node).promisingNode(k);
@@ -332,7 +332,7 @@ public class BPlusTree {
         ((LeafNode) node).insert(new Pair(k, v));
     }
 
-    void delete(int k) {
+    public void delete(int k) {
         Node node = root;
         while (!(node instanceof LeafNode)) {
             node = ((NonLeafNode) node).promisingNode(k);
@@ -340,7 +340,7 @@ public class BPlusTree {
         ((LeafNode) node).delete(k);
     }
 
-    double get(int k) {
+    public double get(int k) {
         Node node = root;
         while (!(node instanceof LeafNode))
             node = ((NonLeafNode) node).promisingNode(k);
@@ -350,7 +350,7 @@ public class BPlusTree {
     }
 
     // l <= k <= r
-    double[] range(int l, int r) {
+    public double[] range(int l, int r) {
         Node lNode = root, rNode = root;
         ArrayList<Double> ans = new ArrayList<>();
 
