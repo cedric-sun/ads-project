@@ -5,10 +5,10 @@ import java.util.stream.Collectors;
 
 public class BPlusTree {
     static class Pair {
-        public final int k;
-        public final double v;
+        final int k;
+        final double v;
 
-        public Pair(int k, double v) {
+        Pair(int k, double v) {
             this.k = k;
             this.v = v;
         }
@@ -22,17 +22,28 @@ public class BPlusTree {
         }
     }
 
+    /**
+     * Abstraction for navigating nodes.
+     */
     class NonLeafNode extends Node {
 
         private ArrayList<Integer> keys;
         private ArrayList<Node> children;
 
-        public NonLeafNode(List<Integer> keys, List<Node> children) {
+        NonLeafNode(List<Integer> keys, List<Node> children) {
             this.keys = new ArrayList<>(keys);
             this.children = new ArrayList<>(children);
         }
 
-        public NonLeafNode(int k, Node leftChild, Node righChild) {
+        /**
+         * Create a NonLeafNode with only 1 navigating key k, with specified
+         * left child and right child.
+         *
+         * @param k
+         * @param leftChild
+         * @param righChild
+         */
+        NonLeafNode(int k, Node leftChild, Node righChild) {
             keys = new ArrayList<>();
             children = new ArrayList<>();
             keys.add(k);
@@ -64,7 +75,13 @@ public class BPlusTree {
             return l;
         }
 
-        public void insert(int k, Node rightChild) {
+        /**
+         * Insert a new navigating key k with specified right child.
+         *
+         * @param k
+         * @param rightChild
+         */
+        void insert(int k, Node rightChild) {
             int i = upperBound(k);
             keys.add(i, k);
             children.add(i + 1, rightChild);
@@ -95,11 +112,11 @@ public class BPlusTree {
         }
 
         /**
-         * Delete the greatest key k' <= k ,and the right child of k'
+         * Delete the greatest key k' <= k ,and the right child of k'.
          *
          * @param k
          */
-        public void delete(int k) {
+        void delete(int k) {
             int i = upperBound(k);
             int removedKey = keys.remove(i - 1);
             children.remove(i);
@@ -131,6 +148,7 @@ public class BPlusTree {
                         children.add(0, borrowedChild);
                         borrowedChild.parent = this;
                     } else if (iRightSib < parent.children.size()) {
+                        // merge right sibling into this
                         NonLeafNode rightSib = (NonLeafNode) parent.children.get(iRightSib);
                         keys.add(parent.keys.get(iRightSep));
                         keys.addAll(rightSib.keys);
@@ -139,6 +157,7 @@ public class BPlusTree {
                             node.parent = this;
                         parent.delete(rightSib.keys.get(0));
                     } else if (iLeftSib >= 0) {
+                        // merge this into left sibling
                         NonLeafNode leftSib = (NonLeafNode) parent.children.get(iLeftSib);
                         leftSib.keys.add(parent.keys.get(iRightSep - 1));
                         leftSib.keys.addAll(keys);
@@ -147,29 +166,31 @@ public class BPlusTree {
                             node.parent = leftSib;
                         parent.delete(removedKey);
                     } else {
-                        System.err.println("WTF0");
-                        System.exit(-1);
+                        throw new Error("IMPOSSIBLE ERROR");
                     }
                 }
             }
         }
     }
 
+    /**
+     * Abstraction for bottom layer nodes storing dictionary pairs.
+     */
     class LeafNode extends Node {
         private LeafNode prev = null, next = null;
         private ArrayList<Pair> data;
 
-        public LeafNode() {
+        LeafNode() {
             data = new ArrayList<>();
         }
 
-        public LeafNode(List<Pair> data) {
+        LeafNode(List<Pair> data) {
             this.data = new ArrayList<>(data);
         }
 
-        public void insert(Pair pair) {
+        void insert(Pair pair) {
             int i = lowerBound(pair.k);
-            if (i < data.size() && data.get(i).k == pair.k) return;//dup
+            if (i < data.size() && data.get(i).k == pair.k) return;//duplicate insertion
             data.add(i, pair);
             if (data.size() > MAX_NODE_SIZE) {
                 LeafNode newLeaf = new LeafNode(data.subList(MIN_NODE_SIZE, M));
@@ -192,11 +213,12 @@ public class BPlusTree {
         }
 
         /**
+         * Get the pair associated with k.
+         *
          * @param k
-         * @return the pair associated with key k, if exist; null otherwise
+         * @return the pair associated with key k, if exists; null otherwise
          */
-        //todo bug: found deleting the first
-        public Pair get(int k) {
+        Pair get(int k) {
             int i = lowerBound(k);
             if (i < data.size() && data.get(i).k == k)
                 return data.get(i);
@@ -223,26 +245,30 @@ public class BPlusTree {
             return l;
         }
 
-        public void delete(int k) {
+        void delete(int k) {
             int i = lowerBound(k);
             if (i >= data.size() || data.get(i).k != k)
                 return;
             data.remove(i);
             if (this != root && data.size() < MIN_NODE_SIZE) {
                 if (prev != null && prev.parent == parent && prev.data.size() > MIN_NODE_SIZE) {
+                    // borrow from left sibling
                     data.add(0, prev.data.remove(prev.data.size() - 1));
                     parent.keys.set(parent.lowerBound(data.get(0).k), data.get(0).k);
                 } else if (next != null && next.parent == parent && next.data.size() > MIN_NODE_SIZE) {
+                    // borrow from right sibling
                     //todo:balancing borrow
                     data.add(next.data.remove(0));
                     parent.keys.set(parent.lowerBound(next.data.get(0).k) - 1, next.data.get(0).k);
                 } else if (prev != null && prev.parent == parent) {
+                    // merge this into leftSibling
                     prev.data.addAll(data);
                     if (next != null)
                         next.prev = prev;
                     prev.next = next;
                     parent.delete(k);
                 } else if (next != null && next.parent == parent) {
+                    //merge right sibling into this
                     data.addAll(next.data);
                     LeafNode originalRightSib = next;
                     if (next.next != null)
@@ -250,8 +276,7 @@ public class BPlusTree {
                     next = next.next;
                     parent.delete(originalRightSib.data.get(0).k);
                 } else {
-                    System.err.println("WTF1");
-                    System.exit(0);
+                    throw new Error("IMPOSSIBLE ERROR");
                 }
             }
         }
