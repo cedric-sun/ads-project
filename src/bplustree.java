@@ -57,7 +57,7 @@ public class bplustree {
                                 Double res = bPlusTree.get(Integer.valueOf(tokens[1]));
                                 ps.println(res);
                             } else if (tokens.length == 3) {
-                                Double[] resArr = bPlusTree.range(
+                                double[] resArr = bPlusTree.range(
                                         Integer.valueOf(tokens[1]), Integer.valueOf(tokens[2]));
                                 StringBuilder sb = new StringBuilder();
                                 for (int i = 0; i < resArr.length; i++) {
@@ -74,13 +74,13 @@ public class bplustree {
                             throw new MalformedInstructionException();
                     }
                 } catch (MalformedInstructionException e) {
-
+                    System.err.println("Malformed Instruction.");
                 } catch (ReinitializationException e) {
-
+                    System.err.println("Reinitialization is not allowed.");
                 } catch (NotInitializedException e) {
-
+                    System.err.println("B+Tree has not been initialized yet.");
                 } catch (NumberFormatException e) {
-
+                    System.err.println("Number format is wrong.");
                 }
             }
         } catch (FileNotFoundException e) {
