@@ -94,10 +94,6 @@ public class BPlusTree {
             }
         }
 
-        public void updateKey(int k) {
-            keys.set(lowerBound(k), k);
-        }
-
         /**
          * Delete the greatest key k' <= k ,and the right child of k'
          *
