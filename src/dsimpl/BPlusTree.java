@@ -40,7 +40,7 @@ public class BPlusTree {
             children.add(righChild);
         }
 
-        Node promisingNode(int k) {
+        Node promisingChild(int k) {
             return children.get(upperBound(k));
         }
 
@@ -279,7 +279,7 @@ public class BPlusTree {
     public void insert(int k, double v) {
         Node node = root;
         while (!(node instanceof LeafNode)) {
-            node = ((NonLeafNode) node).promisingNode(k);
+            node = ((NonLeafNode) node).promisingChild(k);
         }
         ((LeafNode) node).insert(new Pair(k, v));
     }
@@ -287,7 +287,7 @@ public class BPlusTree {
     public void delete(int k) {
         Node node = root;
         while (!(node instanceof LeafNode)) {
-            node = ((NonLeafNode) node).promisingNode(k);
+            node = ((NonLeafNode) node).promisingChild(k);
         }
         ((LeafNode) node).delete(k);
     }
@@ -295,7 +295,7 @@ public class BPlusTree {
     public double get(int k) {
         Node node = root;
         while (!(node instanceof LeafNode))
-            node = ((NonLeafNode) node).promisingNode(k);
+            node = ((NonLeafNode) node).promisingChild(k);
         Pair pair = ((LeafNode) node).get(k);
         if (pair == null) return Double.NaN;
         return pair.v;
@@ -307,8 +307,8 @@ public class BPlusTree {
         ArrayList<Double> ans = new ArrayList<>();
 
         while (!(lNode instanceof LeafNode)) {
-            lNode = ((NonLeafNode) lNode).promisingNode(l);
-            rNode = ((NonLeafNode) rNode).promisingNode(r);
+            lNode = ((NonLeafNode) lNode).promisingChild(l);
+            rNode = ((NonLeafNode) rNode).promisingChild(r);
         }
         LeafNode lCast = (LeafNode) lNode;
         LeafNode rCast = (LeafNode) rNode;
