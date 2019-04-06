@@ -2,6 +2,8 @@ package dsimpl;
 
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -85,7 +87,6 @@ public class BPlusTreeTest {
 
         for (Pair pair : simpleTestData)
             bp.delete(pair.k);
-        System.out.println("F");
     }
 
     @Test
@@ -112,54 +113,39 @@ public class BPlusTreeTest {
             new Pair(18, 0.511996), new Pair(4, 0.773309),
             new Pair(12, 0.534230), new Pair(15, 0.562825)
     };
+
     @Test
     public void simpleInsertAndDelete2() {
         BPlusTree bPlusTree = new BPlusTree(3);
         for (Pair pair : simpleTestData2)
-            bPlusTree.insert(pair.k,pair.v);
+            bPlusTree.insert(pair.k, pair.v);
         for (Pair pair : simpleTestData2)
             bPlusTree.delete(pair.k);
-        System.out.println("F");
-    }
-
-
-    @Test
-    public void get() {
     }
 
     @Test
     public void range() {
-        Pair[] data = new Pair[]{
-                new Pair(9, 0.7258506976568656),
-                new Pair(1, 0.25137529047540985),
-                new Pair(8, 0.436500663475739),
-                new Pair(4, 0.2963288216690265),
-                new Pair(5, 0.6161846898229543),
-                new Pair(7, 0.056058099068894474),
-                new Pair(2, 0.1688243376166424),
-                new Pair(0, 0.46375381209298183),
-                new Pair(3, 0.6122986978235035),
-                new Pair(6, 0.4837472857372376)
-        };
-        BPlusTree bp = new BPlusTree(3);
-        for (int i = 0; i < data.length; i++) {
-            bp.insert(data[i].k, data[i].v);
-        }
-        for (double d : bp.range(3, 7)) {
-            System.out.println(d);
-        }
-    }
-
-    @Test
-    public void BulkInsertAndDelete() {
         final int M = 20, N = 10000;
-        BPlusTree bPlusTree = new BPlusTree(M);
+        BPlusTree bp = new BPlusTree(M);
         Pair[] testData = randomPairArray(N);
-        for (Pair pair : testData)
-            bPlusTree.insert(pair.k, pair.v);
-
-        for (Pair pair : testData)
-            bPlusTree.delete(pair.k);
-        System.out.println("asd");
+        for (Pair pair : testData) {
+            bp.insert(pair.k, pair.v);
+        }
+        Arrays.sort(testData, Comparator.comparingInt(pair -> pair.k));
+        Random random = new Random();
+        //testData: k in [0,N-1]
+        int l = random.nextInt(N), r = random.nextInt(N);
+        if (l > r) {
+            int tmp = l;
+            l = r;
+            r = tmp;
+        }
+        int cnt = r - l + 1;
+        double[] expected = new double[cnt];
+        for (int i = 0; i < cnt; i++) {
+            expected[i] = testData[l + i].v;
+        }
+        double[] actual = bp.range(l, r);
+        assertArrayEquals(expected, actual, 0);
     }
 }

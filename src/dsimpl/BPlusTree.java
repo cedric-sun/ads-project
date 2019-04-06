@@ -304,8 +304,8 @@ public class BPlusTree {
             }
         }
 
-        List<Double> between(int l, int h) {
-            return data.subList(lowerBound(l), upperBound(h))
+        List<Double> between(int l, int r) {
+            return data.subList(lowerBound(l), upperBound(r))
                     .stream().map(pair -> pair.v).collect(Collectors.toList());
         }
     }
@@ -349,20 +349,20 @@ public class BPlusTree {
         return pair.v;
     }
 
-    // l <= k <= h
-    double[] range(int l, int h) {
+    // l <= k <= r
+    double[] range(int l, int r) {
         Node lNode = root, rNode = root;
         ArrayList<Double> ans = new ArrayList<>();
 
         while (!(lNode instanceof LeafNode)) {
             lNode = ((NonLeafNode) lNode).promisingNode(l);
-            rNode = ((NonLeafNode) rNode).promisingNode(h);
+            rNode = ((NonLeafNode) rNode).promisingNode(r);
         }
         LeafNode lCast = (LeafNode) lNode;
         LeafNode rCast = (LeafNode) rNode;
 
         for (; ; ) {
-            ans.addAll(lCast.between(l, h));
+            ans.addAll(lCast.between(l, r));
             if (lCast == rCast) break;
             lCast = lCast.next;
         }
