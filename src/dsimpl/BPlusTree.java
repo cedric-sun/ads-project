@@ -156,12 +156,16 @@ public class BPlusTree {
                         //todo: balancing borrow
                         NonLeafNode rightSib = (NonLeafNode) parent.children.get(iRightSib);
                         keys.add(parent.keys.set(iRightSep, rightSib.keys.remove(0)));
-                        children.add(rightSib.children.remove(0));
+                        Node borrowedChild = rightSib.children.remove(0);
+                        children.add(borrowedChild);
+                        borrowedChild.parent = this;
                     } else if (iLeftSib >= 0 && ((NonLeafNode) parent.children.get(iLeftSib)).keys.size() > MIN_NODE_SIZE) {
                         //borrow from left
                         NonLeafNode leftSib = (NonLeafNode) parent.children.get(iLeftSib);
                         keys.add(0, parent.keys.set(iRightSep - 1, leftSib.keys.remove(leftSib.keys.size() - 1)));
-                        children.add(0, leftSib.children.remove(leftSib.children.size() - 1));
+                        Node borrowedChild = leftSib.children.remove(leftSib.children.size() - 1);
+                        children.add(0, borrowedChild);
+                        borrowedChild.parent = this;
                     } else if (iRightSib < parent.children.size()) {
                         NonLeafNode rightSib = (NonLeafNode) parent.children.get(iRightSib);
                         keys.add(parent.keys.get(iRightSep));
@@ -239,6 +243,7 @@ public class BPlusTree {
          * @param k
          * @return the pair associated with key k, if exist; null otherwise
          */
+        //todo bug: found deleting the first
         public Pair get(int k) {
             int i = lowerBound(k);
             if (i < data.size() && data.get(i).k == k)
@@ -358,7 +363,7 @@ public class BPlusTree {
 
         for (; ; ) {
             ans.addAll(lCast.between(l, h));
-            if (lCast==rCast) break;
+            if (lCast == rCast) break;
             lCast = lCast.next;
         }
         double[] ansPrimitive = new double[ans.size()];
