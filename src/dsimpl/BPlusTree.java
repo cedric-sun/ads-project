@@ -4,29 +4,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class BPlusTree {
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        Queue<Node> now = new ArrayDeque<>();
-        Queue<Node> next = new ArrayDeque<>();
-        now.add(root);
-        while (!now.isEmpty()) {
-            while (!now.isEmpty()) {
-                Node node = now.poll();
-                sb.append(node);
-                if (node instanceof NonLeafNode) {
-                    for (Node child : ((NonLeafNode) node).children)
-                        next.add(child);
-                }
-            }
-            sb.append('\n');
-            Queue<Node> tmp = now;
-            now = next;
-            next = tmp;
-        }
-        return sb.toString();
-    }
-
     static class Pair {
         public final int k;
         public final double v;
@@ -46,17 +23,6 @@ public class BPlusTree {
     }
 
     class NonLeafNode extends Node {
-        @Override
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-            sb.append("In[");
-            for (int i = 0; i < keys.size(); i++) {
-                if (i != 0) sb.append(',');
-                sb.append(keys.get(i));
-            }
-            sb.append(']');
-            return sb.toString();
-        }
 
         private ArrayList<Integer> keys;
         private ArrayList<Node> children;
@@ -194,18 +160,6 @@ public class BPlusTree {
     }
 
     class LeafNode extends Node {
-        @Override
-        public String toString() {
-            StringBuilder sb = new StringBuilder();
-            sb.append('[');
-            for (int i = 0; i < data.size(); i++) {
-                if (i != 0) sb.append(',');
-                sb.append(data.get(i).k);
-            }
-            sb.append(']');
-            return sb.toString();
-        }
-
         private LeafNode prev = null, next = null;
         private ArrayList<Pair> data;
 
@@ -373,44 +327,5 @@ public class BPlusTree {
             ansPrimitive[i] = ans.get(i);
         }
         return ansPrimitive;
-    }
-
-    /*----------------TEST ONLY STUFFS------------------*/
-
-    boolean testonlySanityCheck() {
-        sanityRecur(root);
-        return false;
-    }
-
-    boolean sanityRecur(Node node) {
-        if (node instanceof LeafNode) {
-            LeafNode cast = (LeafNode) node;
-            for (int i = 1; i < cast.data.size(); i++) {
-                if (cast.data.get(i - 1).k >= cast.data.get(i).k) {
-                    return false;
-                }
-            }
-            if (cast.prev != null &&
-                    cast.prev.data.get(cast.prev.data.size() - 1).k >= cast.data.get(0).k) {
-                return false;
-            }
-            if (cast.next != null &&
-                    cast.next.data.get(0).k <= cast.data.get(cast.data.size() - 1).k) {
-                return false;
-            }
-            return true;
-        } else {
-            NonLeafNode cast = (NonLeafNode) node;
-            for (int i = 1; i < cast.keys.size(); i++) {
-                if (cast.keys.get(i - 1) >= cast.keys.get(i))
-                    return false;
-            }
-
-            for (Node child : cast.children) {
-                boolean succ = sanityRecur(child);
-                if (!succ) return false;
-            }
-        }
-        return false;
     }
 }
