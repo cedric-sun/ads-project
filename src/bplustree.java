@@ -28,6 +28,7 @@ public class bplustree {
                 PrintStream ps = new PrintStream(OUTPUT_FILENAME)
         ) {
             String line;
+            int lineNum = 1;
             BPlusTree bPlusTree = null;
             while ((line = br.readLine()) != null) {
                 String[] tokens = line.split("[\\(,\\)]");
@@ -77,14 +78,15 @@ public class bplustree {
                             throw new MalformedInstructionException();
                     }
                 } catch (MalformedInstructionException e) {
-                    System.err.println("Malformed Instruction.");
+                    System.err.println("Malformed Instruction. Operation is ignored. Line: " + lineNum);
                 } catch (ReinitializationException e) {
-                    System.err.println("Reinitialization is not allowed.");
+                    System.err.println("Reinitialization is not allowed. Operation is ignored. Line: " + lineNum);
                 } catch (NotInitializedException e) {
-                    System.err.println("B+Tree has not been initialized yet.");
+                    System.err.println("B+Tree has not been initialized yet. Operation is ignored. Line: " + lineNum);
                 } catch (NumberFormatException e) {
-                    System.err.println("Number format is wrong.");
+                    System.err.println("Number format is wrong. Operation is ignored. Line: " + lineNum);
                 }
+                lineNum++;
             }
         } catch (FileNotFoundException e) {
             System.err.println("File doesn't exist.");
