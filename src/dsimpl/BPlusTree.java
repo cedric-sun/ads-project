@@ -23,7 +23,8 @@ public class BPlusTree {
     }
 
     /**
-     * Abstraction for navigating nodes.
+     * Abstraction for non-leaf nodes. Non-leaf node only serves as navigator
+     * for searching on tree.
      */
     class NonLeafNode extends Node {
 
@@ -36,7 +37,7 @@ public class BPlusTree {
         }
 
         /**
-         * Create a NonLeafNode with only 1 navigating key k, with specified
+         * Create a NonLeafNode with only 1 navigating key {@code k}, with specified
          * left child and right child.
          *
          * @param k
@@ -51,6 +52,12 @@ public class BPlusTree {
             children.add(righChild);
         }
 
+        /**
+         * For a given search key {@code k}, return the promising child to which
+         * the searching should descend.
+         * @param k
+         * @return
+         */
         Node promisingChild(int k) {
             return children.get(upperBound(k));
         }
