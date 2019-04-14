@@ -23,7 +23,10 @@ public class BPlusTree {
     }
 
     /**
-     * Abstraction for navigating nodes.
+     * The number of children pointers in a non-leaf node is exactly 1 more than
+     * the number of navigation key. The greater-than-left-sub-tree and less-than-right-sub-tree
+     * properties are maintained by strictly keep the correspondence of the indexes of the {@code keys}
+     * list and {@code children} list.
      */
     class NonLeafNode extends Node {
 
@@ -37,7 +40,9 @@ public class BPlusTree {
 
         /**
          * Create a NonLeafNode with only 1 navigating key k, with specified
-         * left child and right child.
+         * left child and right child. For the sake of safe publication (even
+         * this is single-threaded data structure), the parent pointer in
+         * leftChild and rightChild should be set after the constructor returns.
          *
          * @param k
          * @param leftChild
@@ -51,6 +56,14 @@ public class BPlusTree {
             children.add(righChild);
         }
 
+        /**
+         * Get the promising child for key {@code k}. At any specific non-leaf node,
+         * for any given {@code k}, there is only 1 promising child which you should
+         * descend to, where you could possibly find key {@code k}.
+         *
+         * @param k
+         * @return
+         */
         Node promisingChild(int k) {
             return children.get(upperBound(k));
         }
@@ -76,7 +89,7 @@ public class BPlusTree {
         }
 
         /**
-         * Insert a new navigating key k with specified right child.
+         * Insert a new navigation key {@code k} with specified right child.
          *
          * @param k
          * @param rightChild
@@ -134,7 +147,6 @@ public class BPlusTree {
                     if (iRightSib < parent.children.size()
                             && ((NonLeafNode) parent.children.get(iRightSib)).keys.size() > MIN_NODE_SIZE) {
                         //borrow from right
-                        //todo: balancing borrow
                         NonLeafNode rightSib = (NonLeafNode) parent.children.get(iRightSib);
                         keys.add(parent.keys.set(iRightSep, rightSib.keys.remove(0)));
                         Node borrowedChild = rightSib.children.remove(0);
@@ -173,9 +185,6 @@ public class BPlusTree {
         }
     }
 
-    /**
-     * Abstraction for bottom layer nodes storing dictionary pairs.
-     */
     class LeafNode extends Node {
         private LeafNode prev = null, next = null;
         private ArrayList<Pair> data;
@@ -188,6 +197,13 @@ public class BPlusTree {
             this.data = new ArrayList<>(data);
         }
 
+        /**
+         * Insert the given Pair {@code pair} into this leaf node.
+         *
+         * The policy is to ignore duplicate key insertion.
+         *
+         * @param pair
+         */
         void insert(Pair pair) {
             int i = lowerBound(pair.k);
             if (i < data.size() && data.get(i).k == pair.k) return;//duplicate insertion
@@ -245,6 +261,11 @@ public class BPlusTree {
             return l;
         }
 
+        /**
+         * Delete the pair that has the given key {@code k}
+         *
+         * @param k
+         */
         void delete(int k) {
             int i = lowerBound(k);
             if (i >= data.size() || data.get(i).k != k)
@@ -257,7 +278,6 @@ public class BPlusTree {
                     parent.keys.set(parent.lowerBound(data.get(0).k), data.get(0).k);
                 } else if (next != null && next.parent == parent && next.data.size() > MIN_NODE_SIZE) {
                     // borrow from right sibling
-                    //todo:balancing borrow
                     data.add(next.data.remove(0));
                     parent.keys.set(parent.lowerBound(next.data.get(0).k) - 1, next.data.get(0).k);
                 } else if (prev != null && prev.parent == parent) {
@@ -281,6 +301,13 @@ public class BPlusTree {
             }
         }
 
+        /**
+         * Range search in this leaf node. l and r are both inclusive.
+         *
+         * @param l
+         * @param r
+         * @return a {@link java.util.List<Double>} object that contains the result values of the range search
+         */
         List<Double> between(int l, int r) {
             return data.subList(lowerBound(l), upperBound(r))
                     .stream().map(pair -> pair.v).collect(Collectors.toList());
@@ -288,7 +315,7 @@ public class BPlusTree {
     }
 
 
-    private final int M;
+    private final int M;    // order of the b+ tree
     private final int MAX_NODE_SIZE;
     private final int MIN_NODE_SIZE;
 
